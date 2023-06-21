@@ -1,9 +1,12 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable react/prop-types */
 import { useEffect, useRef, useState, useCallback } from "react";
 
+import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
 import WaveSurfer from "https://unpkg.com/wavesurfer.js@beta";
 import Regions from "https://unpkg.com/wavesurfer.js@7.0.0-beta.11/dist/plugins/regions.js";
-import { createFFmpeg, fetchFile } from "@ffmpeg/ffmpeg";
+
+import css from "./AudioCutter.module.css";
 
 const FFMPEG_CONFIGURATION = Object.freeze({
   log: true,
@@ -32,91 +35,59 @@ const useWavesurfer = (containerRef, options) => {
   return wavesurfer;
 };
 
-// const useFFmpeg = () => {
-//   const [ready, setReady] = useState(false);
-
-//   const loadFFmpeg = async () => {
-//     await ffmpeg.load();
-//     setReady(true);
-//   };
-
-//   useEffect(() => {
-//     loadFFmpeg();
-//   }, []);
-
-//   return ready;
-// };
-
 function WaveSurferPlayer(props) {
   const { file } = props;
 
-  const containerRef = useRef();
-  const cutterTime = useRef({ startTime: 0, endTime: 0 });
-
-  const [outputAudio, setOutputAudio] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+  const [outputAudio, setOutputAudio] = useState(null);
 
+  const containerRef = useRef();
+  const cutterTime = useRef({ startTime: 0, endTime: 0 });
   const wavesurfer = useWavesurfer(containerRef, props);
-  // const readyLoadFFmpeg = useFFmpeg();
 
-  const onPlayClick = useCallback(() => {
-    wavesurfer.isPlaying() ? wavesurfer.pause() : wavesurfer.play();
-  }, [wavesurfer]);
-
-  useEffect(() => {
-    if (!wavesurfer) return;
-
-    setCurrentTime(0);
-    setIsPlaying(false);
-
-    // const WaveSurferRegions = wavesurfer.registerPlugin(Regions.create());
+  const handleWaveSurferEvent = () => {
     const WaveSurferRegion = wavesurfer.plugins[0];
-    const RegionConfig = {
-      loop: true,
-      activeRegion: null,
-    };
+    let activeRegion = null;
 
-    const subscriptions = [
-      wavesurfer.on("ready", () => {
-        WaveSurferRegion.addRegion({
-          start: 0,
-          end: wavesurfer.getDuration(),
-        });
-      }),
-      wavesurfer.on("timeupdate", (currentTime) => {
-        if (
-          RegionConfig.activeRegion &&
-          wavesurfer.isPlaying() &&
-          currentTime >= RegionConfig.activeRegion.end
-        ) {
-          if (RegionConfig.loop) {
-            // If looping, jump to the start of the region
-            wavesurfer.setTime(RegionConfig.activeRegion.start);
-          } else {
-            // Otherwise, exit the region
-            RegionConfig.activeRegion = null;
-          }
-        }
-        setCurrentTime(currentTime);
-      }),
-      wavesurfer.on("play", () => setIsPlaying(true)),
-      wavesurfer.on("pause", () => setIsPlaying(false)),
-      wavesurfer.on("interaction", () => (RegionConfig.activeRegion = null)),
-      WaveSurferRegion.on("region-clicked", (region, e) => {
-        e.stopPropagation();
-        RegionConfig.activeRegion = region;
-        region.play();
-      }),
-      WaveSurferRegion.on("region-updated", (region) => {
-        cutterTime.current = { startTime: region.start, endTime: region.end };
-      }),
-    ];
+    wavesurfer.on("play", () => setIsPlaying(true));
 
-    return () => {
-      subscriptions.forEach((unsub) => unsub());
-    };
-  }, [wavesurfer]);
+    wavesurfer.on("pause", () => setIsPlaying(false));
+
+    wavesurfer.on("interaction", () => (activeRegion = null));
+
+    wavesurfer.on("ready", () => {
+      WaveSurferRegion.addRegion({
+        start: 0,
+        end: wavesurfer.getDuration(),
+      });
+    });
+
+    wavesurfer.on("timeupdate", (currentTime) => {
+      if (
+        activeRegion &&
+        wavesurfer.isPlaying() &&
+        currentTime >= activeRegion.end
+      ) {
+        wavesurfer.setTime(activeRegion.start);
+      }
+
+      setCurrentTime(currentTime);
+    });
+
+    WaveSurferRegion.on("region-clicked", (region, e) => {
+      e.stopPropagation();
+      activeRegion = region;
+      region.play();
+    });
+
+    WaveSurferRegion.on("region-updated", (region) => {
+      cutterTime.current = {
+        startTime: region.start,
+        endTime: region.end,
+      };
+    });
+  };
 
   const converterTime = (time) => {
     const hour = Math.floor(time / 3600);
@@ -131,10 +102,10 @@ function WaveSurferPlayer(props) {
       ("0" + seconds).slice(-2)
     );
   };
-  
-  const cutAudio = async () => {
-    const patron = /^(.+)\.\w+$/;
-    const fileOutputName = `${file.name.match(patron)[1]}-cut.mp3`;
+
+  const handleCutAudio = async () => {
+    const REGEX = /^(.+)\.\w+$/;
+    const fileOutputName = `${file.name.match(REGEX)[1]}-cut.mp3`;
 
     const ffmpeg = createFFmpeg(FFMPEG_CONFIGURATION);
     await ffmpeg.load();
@@ -163,15 +134,45 @@ function WaveSurferPlayer(props) {
     setOutputAudio(audioUrl);
   };
 
-  return (
-    <>
-      <p>Seconds played: {currentTime}</p>
-      <div ref={containerRef} style={{ minHeight: "120px" }} />
-      <button onClick={onPlayClick}>{isPlaying ? "Pause" : "Play"}</button>
-      <button onClick={cutAudio}>✂</button>
+  const handlePlayClick = useCallback(() => {
+    wavesurfer.isPlaying() ? wavesurfer.pause() : wavesurfer.play();
+  }, [wavesurfer]);
 
-      {outputAudio && <audio src={outputAudio} controls />}
-    </>
+  useEffect(() => {
+    if (!wavesurfer) return;
+
+    setCurrentTime(0);
+    setIsPlaying(false);
+
+    // We trigger all events from WaveSufer
+    handleWaveSurferEvent();
+
+    return () => {
+      wavesurfer.unAll();
+    };
+  }, [wavesurfer]);
+
+  return (
+    <div className={css["audio__content"]}>
+      <p>Seconds played: {converterTime(currentTime)}</p>
+
+      <div ref={containerRef} style={{ minHeight: "120px" }} />
+
+      <div className={css["audio__buttons"]}>
+        <button className={css.button} onClick={handlePlayClick}>
+          {isPlaying ? "Pause" : "Play"}
+        </button>
+        <button className={css.button} onClick={handleCutAudio}>
+          ✂
+        </button>
+      </div>
+
+      {outputAudio ? (
+        <div data-audio>
+          <audio src={outputAudio} controls />
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -188,17 +189,28 @@ export default function AudioCutter() {
   };
 
   return (
-    <>
-      <WaveSurferPlayer
-        height={100}
-        waveColor="rgb(108, 92, 231)"
-        progressColor="rgb(10, 24, 33)"
-        url={audioUrl}
-        plugins={[Regions.create()]}
-        file={audioFile}
-      />
+    <section className={css["content"]}>
+      <label className={css["drop__container"]}>
+        <span className={css["drop__title"]}>Drop files here</span> or
+        <input
+          type="file"
+          accept="audio/*"
+          required
+          onChange={handleChange}
+          placeholder="Select your files"
+        />
+      </label>
 
-      <input type="file" onChange={handleChange} />
-    </>
+      {audioFile ? (
+        <WaveSurferPlayer
+          height={100}
+          waveColor="rgb(59, 48, 84)"
+          progressColor="hsl(0, 0%, 75%)"
+          url={audioUrl}
+          plugins={[Regions.create()]}
+          file={audioFile}
+        />
+      ) : null}
+    </section>
   );
 }

@@ -1,0 +1,95 @@
+.content {
+    --clr-primary-white: hsl(0, 0%, 100%);
+    --clr-primary-dark-violet: hsl(257, 27%, 26%);
+    --clr-secondary: hsl(0, 0%, 0%);
+    --clr-neutral-gray: hsl(0, 0%, 75%);
+    --clr-neutral-grayish-violet: hsl(230, 25%, 95%);
+    --clr-neutral-dark-violet: hsl(260, 8%, 14%);
+
+    display: grid;
+    place-content: center;
+}
+
+
+.drop__container {
+    padding: max(1rem, 1vw) max(1.5rem, 5vw);
+    display: grid;
+    place-items: center;
+    background-color: var(--clr-primary-white);
+    color: var(--clr-neutral-dark-violet);
+    border-radius: .625rem;
+    border: 2px dashed var(--clr-neutral-gray);
+    cursor: pointer;
+    transition: background 500ms ease-in-out;
+}
+
+.drop__container:hover {
+    background: var(--clr-neutral-grayish-violet);
+}
+
+.drop__title {
+    font-size: clamp(1rem, 4vw - 1rem, 1.25rem);
+    font-weight: 600;
+}
+
+input[type=file] {
+    padding: 5px;
+    background: var(--clr-primary-white);
+    border-radius: .625rem;
+    border: 1px solid var(--clr-neutral-gray);
+}
+
+input[type=file]::file-selector-button {
+    margin-inline-end: 1rem;
+    padding: .625rem 1.25rem;
+    background-color: var(--clr-primary-dark-violet);
+    color: var(--clr-primary-white);
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: .625rem;
+    border: .0625rem solid transparent;
+    transition: background .2s ease-in-out;
+}
+
+input[type=file]::file-selector-button:hover {
+    background-color: var(--clr-neutral-dark-violet);
+}
+
+/* Audio */
+.audio__content {
+    color: var(--clr-neutral-dark-violet);
+}
+
+.audio__content p {
+    font-weight: 600;
+}
+
+.audio__buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.audio__content div[data-audio] {
+    display: flex;
+    justify-content: center;
+    margin-block: min(1rem, 2vw);
+}
+
+.button {
+    padding: var(--button-padding, 0.35rem 1rem);
+    text-decoration: none;
+    border: 1px solid transparent;
+    background-color: var(--button-bg, var(--clr-primary-dark-violet));
+    color: var(--button-color, var(--clr-primary-white));
+    cursor: pointer;
+    transition: background-color 500ms ease-in-out;
+    border-radius: var(--button-radius, 0.5rem);
+    text-transform: capitalize;
+    font-weight: 600;
+}
+
+
+.button:hover {
+    --button-bg: var(--clr-neutral-dark-violet);
+}
