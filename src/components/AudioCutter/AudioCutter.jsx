@@ -204,11 +204,14 @@ export default function AudioCutter() {
       {audioFile ? (
         <WaveSurferPlayer
           height={100}
-          waveColor="rgb(59, 48, 84)"
-          progressColor="hsl(0, 0%, 75%)"
+          waveColor="rgb(134, 108, 196)"
+          progressColor="rgb(59, 48, 84)"
           url={audioUrl}
           plugins={[Regions.create()]}
           file={audioFile}
+          barWidth="3"
+          barGap="1"
+          barRadius="2"
         />
       ) : null}
     </section>

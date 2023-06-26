@@ -1,4 +1,5 @@
 import AudioCutter from "./components/AudioCutter/AudioCutter";
+import AudioJoiner from "./components/AudioJoiner/AudioJoiner";
 
 function App() {
   return (
@@ -10,12 +11,12 @@ function App() {
       <main>
         <section>
           <h2>Audio Cutter ✂</h2>
-          <AudioCutter/>
+          <AudioCutter />
         </section>
 
         <section>
           <h2>Audio Join 🔗</h2>
-         {/* Put your component here... ❌ */}
+          <AudioJoiner />
         </section>
       </main>
     </>
