@@ -1,7 +1,14 @@
-import AudioCutter from "./components/AudioCutter/AudioCutter";
-import AudioJoiner from "./components/AudioJoiner/AudioJoiner";
+// import AudioCutter from "./components/AudioCutter/AudioCutter";
+// import AudioJoiner from "./components/AudioJoiner/AudioJoiner";
+
+import { useRef } from "react";
+import useResize from "./hooks/useResize";
 
 function App() {
+  const containerRef = useRef();
+
+  const { styles } = useResize(containerRef);
+
   return (
     <>
       <header>
@@ -9,15 +16,12 @@ function App() {
       </header>
 
       <main>
-        <section>
-          <h2>Audio Cutter ✂</h2>
-          <AudioCutter />
-        </section>
-
-        <section>
-          <h2>Audio Join 🔗</h2>
-          <AudioJoiner />
-        </section>
+        <div ref={containerRef} className="container" style={{...styles}}>
+          {/* 🎵 Audio */}
+          <span data-side="left" className="side"></span>
+          <span data-side="right" className="side side--right"></span>
+        </div>
+        
       </main>
     </>
   );
